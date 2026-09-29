@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
     "dev": "bun run api/server.ts"
   },
   "devDependencies": {

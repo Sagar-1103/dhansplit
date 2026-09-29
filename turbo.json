@@ -1,11 +1,13 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": ["NODE_ENV", "PORT", "CORS_ORIGIN"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "outputs": [],
+      "env": ["PORT", "CORS_ORIGIN"]
     },
     "lint": {
       "dependsOn": ["^lint"]
