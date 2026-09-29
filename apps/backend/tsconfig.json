@@ -6,6 +6,10 @@
     "module": "Preserve",
     "moduleDetection": "force",
     "types": ["bun"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ],
     "jsx": "react-jsx",
     "allowJs": true,
 

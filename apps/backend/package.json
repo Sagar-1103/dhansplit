@@ -8,14 +8,13 @@
     "check-types": "tsc --noEmit",
     "dev": "bun run api/server.ts"
   },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "dotenv": "^18.0.4",
-    "@repo/db": "workspace:*"
+    "@repo/db": "workspace:*",
+    "@types/bun": "latest"
   }
 }

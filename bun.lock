@@ -4,6 +4,7 @@
     "": {
       "name": "dhansplit",
       "devDependencies": {
+        "@types/bun": "latest",
         "prettier": "3.9.6",
         "turbo": "^2.11.5",
         "typescript": "7.0.2",
@@ -13,10 +14,8 @@
       "name": "backend",
       "dependencies": {
         "@repo/db": "workspace:*",
-        "dotenv": "^18.0.4",
-      },
-      "devDependencies": {
         "@types/bun": "latest",
+        "dotenv": "^18.0.4",
       },
       "peerDependencies": {
         "typescript": "^5",
