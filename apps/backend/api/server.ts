@@ -1,3 +1,4 @@
+import { prisma } from "@repo/db";
 import { env } from "../src/constants/env";
 
 const server = Bun.serve({
@@ -11,7 +12,19 @@ const server = Bun.serve({
             "Access-Control-Allow-Origin": env.CORS_ORIGIN,
           },
         }
-      )
+      ),
+      "/api/auth/users": async() => {
+        const count = await prisma.user.count({});
+        return Response.json(
+          { success: true, count },
+          {
+            headers: {
+              "Access-Control-Allow-Origin": env.CORS_ORIGIN,
+            },
+          }
+        )
+      }
+      
   },
   fetch(req: Request) {
     if (req.method === "OPTIONS") {
