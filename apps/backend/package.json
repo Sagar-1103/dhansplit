@@ -1,20 +1,26 @@
 {
   "name": "backend",
-  "module": "index.ts",
-  "type": "module",
+  "module": "api/server.ts",
   "private": true,
   "scripts": {
-    "build": "tsc --noEmit",
-    "check-types": "tsc --noEmit",
-    "dev": "bun run api/server.ts"
+    "dev": "bun run api/server.ts",
+    "build": "bun build api/server.ts --target node --outdir dist",
+    "check-types": "tsc --noEmit"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10"
+  },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "dotenv": "^18.0.4",
+    "@prisma/client": "^7.10.0",
     "@repo/db": "workspace:*",
-    "@types/bun": "latest"
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.4",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.6.5"
   }
 }

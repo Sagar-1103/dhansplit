@@ -1,23 +1,21 @@
 {
   "name": "@repo/db",
   "module": "index.ts",
-  "type": "module",
   "private": true,
   "scripts": {
     "generate": "prisma generate",
     "build": "bun run generate && bun build ./src/index.ts --outdir ./dist --target=node --external=\"*\""
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.0"
   },
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
     }
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^26.6.3",
-    "@types/pg": "^8.23.1",
-    "prisma": "^7.10.0"
   },
   "peerDependencies": {
     "typescript": "^5"

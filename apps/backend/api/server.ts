@@ -1,52 +1,20 @@
-import { prisma } from "@repo/db";
-import { env } from "../src/constants/env";
+import app from "../src/app";
+import { env } from "../src/config/env";
 
 const server = Bun.serve({
   port: env.PORT,
-  routes: {
-    "/api/health": () =>
-      Response.json(
-        { success: true },
-        {
-          headers: {
-            "Access-Control-Allow-Origin": env.CORS_ORIGIN,
-          },
-        }
-      ),
-      "/api/auth/users": async() => {
-        const count = await prisma.user.count({});
-        return Response.json(
-          { success: true, count },
-          {
-            headers: {
-              "Access-Control-Allow-Origin": env.CORS_ORIGIN,
-            },
-          }
-        )
-      }
-      
-  },
-  fetch(req: Request) {
-    if (req.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": env.CORS_ORIGIN,
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      });
-    }
+  async fetch(req: Request) {
+    const res = await app.handle(req);
+    if (res) return res;
 
-    const headers = {
-      "Access-Control-Allow-Origin": env.CORS_ORIGIN,
-      "Content-Type": "application/json",
-    };
-
-    return new Response(JSON.stringify({ error: "Not Found" }), {
+    return new Response(JSON.stringify({ success: false, message: "Route not found" }), {
       status: 404,
-      headers,
+      headers: {
+        "Access-Control-Allow-Origin": env.CORS_ORIGIN,
+        "Content-Type": "application/json",
+      },
     });
   },
 });
 
-console.log(`Server is running on port ${server.port}`);
+console.log(`Server running in ${env.NODE_ENV} mode on port ${server.port}`);
