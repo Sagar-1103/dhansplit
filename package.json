@@ -15,6 +15,12 @@
     "turbo": "^2.11.5",
     "typescript": "7.0.2"
   },
+  "overrides": {
+    "@babel/core": "^7.20.0"
+  },
+  "resolutions": {
+    "@babel/core": "^7.20.0"
+  },
   "engines": {
     "node": ">=24"
   },
