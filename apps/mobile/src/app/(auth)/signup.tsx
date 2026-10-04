@@ -13,7 +13,13 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { AuthFooter, AuthHeader, BackButton, Banner } from '@/components/auth';
+import {
+  AuthFooter,
+  AuthHeader,
+  BackButton,
+  Banner,
+  BrandBadge,
+} from '@/components/auth';
 import { PhotoSheet } from '@/components/photo-sheet';
 import { Field, PrimaryButton } from '@/components/form';
 import { signup } from '@/api/auth';
@@ -50,7 +56,7 @@ export default function Signup() {
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!result.canceled) {
+    if (!result.canceled && result.assets[0]) {
       setPhoto(result.assets[0]);
     }
   }
@@ -66,20 +72,24 @@ export default function Signup() {
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!result.canceled) {
+    if (!result.canceled && result.assets[0]) {
       setPhoto(result.assets[0]);
     }
   }
 
-  async function onSubmit() {
+  function validate() {
     const next: typeof errors = {};
-    if (fullName.trim().length < 2) next.fullName = 'Enter your full name';
+    if (!fullName.trim()) next.fullName = 'Full name is required';
     if (!EMAIL_REGEX.test(email)) next.email = 'Enter a valid email address';
     if (password.length < 8) next.password = 'Password must be at least 8 characters';
-    if (confirmPassword !== password) next.confirmPassword = "Passwords don't match";
+    if (password !== confirmPassword)
+      next.confirmPassword = 'Passwords do not match';
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    return Object.keys(next).length === 0;
+  }
 
+  async function onSubmit() {
+    if (!validate()) return;
     setLoading(true);
     setFormError(null);
     try {
@@ -98,10 +108,10 @@ export default function Signup() {
   }
 
   const eyeIcon = (show: boolean, toggle: () => void) => (
-    <Pressable className="px-3 py-3 active:opacity-60" onPress={toggle}>
+    <Pressable className="px-2 py-2 active:opacity-60" onPress={toggle}>
       <Ionicons
         name={show ? 'eye-off-outline' : 'eye-outline'}
-        size={20}
+        size={18}
         color={isDark ? '#9CA3AF' : '#6B7280'}
       />
     </Pressable>
@@ -122,121 +132,174 @@ export default function Signup() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="flex-grow justify-center px-8 py-12"
-        keyboardShouldPersistTaps="handled"
-      >
-        <BackButton />
-        <AuthHeader
-          title="Create your account"
-          subtitle="Start splitting expenses in minutes"
-        />
-
-        {formError ? (
-          <View className="mt-6">
-            <Banner tone="error" message={formError} />
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="flex-grow justify-center px-6 py-10"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top Row: Back button */}
+          <View className="mb-4">
+            <BackButton />
           </View>
-        ) : null}
 
-        <View className="mt-8 items-center gap-3">
-          <Pressable
-            onPress={() => setSheetOpen(true)}
-            className="h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 active:opacity-60"
-          >
-            {photo ? (
-              <Image source={{ uri: photo.uri }} className="h-full w-full" />
-            ) : (
-              <Ionicons
-                name="camera-outline"
-                size={28}
-                color={isDark ? '#6B7280' : '#9CA3AF'}
+          {/* Central Dhansplit Brand Identity */}
+          <BrandBadge />
+
+          {/* Floating Luminous Card Container */}
+          <View className="rounded-[32px] bg-white/85 dark:bg-[#151322]/90 p-6 border border-white/80 dark:border-white/10 shadow-2xl shadow-neutral-900/10">
+            <AuthHeader
+              tagline="// Join Dhansplit"
+              title="Create Account"
+              subtitle="Start tracking group expenses and settle debts seamlessly."
+            />
+
+            {formError ? (
+              <View className="mb-5">
+                <Banner tone="error" message={formError} />
+              </View>
+            ) : null}
+
+            {/* Profile Avatar Upload with polished styling */}
+            <View className="items-center mb-5">
+              <View className="relative">
+                <Pressable
+                  onPress={() => setSheetOpen(true)}
+                  className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-neutral-800 shadow-sm active:opacity-75"
+                >
+                  {photo ? (
+                    <Image source={{ uri: photo.uri }} className="h-full w-full" />
+                  ) : (
+                    <Ionicons
+                      name="camera-outline"
+                      size={26}
+                      color={isDark ? '#A78BFA' : '#7C3AED'}
+                    />
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => setSheetOpen(true)}
+                  className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-neutral-900 dark:bg-white shadow-sm active:opacity-80"
+                >
+                  <Ionicons
+                    name="add"
+                    size={14}
+                    color={isDark ? '#1A1A2E' : '#FFFFFF'}
+                  />
+                </Pressable>
+              </View>
+              <Text className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 mt-1.5">
+                Profile Photo (Optional)
+              </Text>
+            </View>
+
+            <View className="gap-3.5">
+              <Field
+                label="Full Name"
+                placeholder="John Doe"
+                autoCapitalize="words"
+                value={fullName}
+                onChangeText={setFullName}
+                error={errors.fullName}
+                leftIcon={
+                  <Ionicons
+                    name="person-outline"
+                    size={18}
+                    color={isDark ? '#A78BFA' : '#7C3AED'}
+                  />
+                }
               />
-            )}
-          </Pressable>
-          <Pressable onPress={() => setSheetOpen(true)} className="active:opacity-60">
-            <Text className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-              {photo ? 'Change photo' : 'Upload photo'}
-            </Text>
-          </Pressable>
-        </View>
 
-        <View className="mt-8 gap-5">
-          <Field
-            label="Full name"
-            placeholder="Your name"
-            autoCapitalize="words"
-            autoComplete="name"
-            value={fullName}
-            onChangeText={setFullName}
-            error={errors.fullName}
-          />
-          <Field
-            label="Email address"
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            value={email}
-            onChangeText={setEmail}
-            error={errors.email}
-          />
-          <Field
-            label="Password"
-            placeholder="At least 8 characters"
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            value={password}
-            onChangeText={setPassword}
-            error={errors.password}
-            rightIcon={eyeIcon(showPassword, () => setShowPassword((s) => !s))}
-          />
-          <Field
-            label="Confirm password"
-            placeholder="Repeat your password"
-            secureTextEntry={!showConfirmPassword}
-            autoCapitalize="none"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            error={errors.confirmPassword}
-            onSubmitEditing={onSubmit}
-            rightIcon={eyeIcon(showConfirmPassword, () =>
-              setShowConfirmPassword((s) => !s)
-            )}
-          />
-        </View>
+              <Field
+                label="Email address"
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={email}
+                onChangeText={setEmail}
+                error={errors.email}
+                leftIcon={
+                  <Ionicons
+                    name="mail-outline"
+                    size={18}
+                    color={isDark ? '#A78BFA' : '#7C3AED'}
+                  />
+                }
+              />
 
-        <PrimaryButton
-          title="Create account"
-          loadingTitle="Creating account..."
-          onPress={onSubmit}
-          loading={loading}
-          wrapperClassName="mt-8"
+              <Field
+                label="Password"
+                placeholder="At least 8 characters"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                error={errors.password}
+                leftIcon={
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={18}
+                    color={isDark ? '#A78BFA' : '#7C3AED'}
+                  />
+                }
+                rightIcon={eyeIcon(showPassword, () =>
+                  setShowPassword((p) => !p)
+                )}
+              />
+
+              <Field
+                label="Confirm Password"
+                placeholder="Repeat password"
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                error={errors.confirmPassword}
+                leftIcon={
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={18}
+                    color={isDark ? '#A78BFA' : '#7C3AED'}
+                  />
+                }
+                rightIcon={eyeIcon(showConfirmPassword, () =>
+                  setShowConfirmPassword((p) => !p)
+                )}
+              />
+            </View>
+
+            <PrimaryButton
+              title="Create Account"
+              loadingTitle="Creating account..."
+              onPress={onSubmit}
+              loading={loading}
+              wrapperClassName="mt-6"
+            />
+          </View>
+
+          {/* Footer Link */}
+          <View className="mt-6">
+            <AuthFooter
+              question="Already have an account?"
+              linkText="Sign in"
+              href="/(auth)/login"
+            />
+          </View>
+        </ScrollView>
+
+        <PhotoSheet
+          visible={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          onCamera={openCamera}
+          onGallery={openGallery}
+          onRemove={
+            photo
+              ? () => {
+                  setPhoto(null);
+                  setSheetOpen(false);
+                }
+              : undefined
+          }
         />
-
-        <View className="mt-8">
-          <AuthFooter
-            question="Already have an account?"
-            linkText="Log in"
-            href="/(auth)/login"
-          />
-        </View>
-      </ScrollView>
-
-      <PhotoSheet
-        visible={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        onCamera={openCamera}
-        onGallery={openGallery}
-        onRemove={
-          photo
-            ? () => {
-                setPhoto(null);
-                setSheetOpen(false);
-              }
-            : undefined
-        }
-      />
       </KeyboardAvoidingView>
     </LinearGradient>
   );

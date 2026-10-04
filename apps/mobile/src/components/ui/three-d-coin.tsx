@@ -1,19 +1,52 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/hooks/use-theme';
+
+const LIGHT_COIN = require('@/assets/images/logos/dhansplit-coin-light.png');
+const DARK_COIN = require('@/assets/images/logos/dhansplit-coin-dark.png');
 
 interface ThreeDCoinProps {
   size?: number;
   symbol?: string;
   iconName?: keyof typeof Ionicons.glyphMap;
+  useLogo?: boolean;
 }
 
 export function ThreeDCoin({
   size = 180,
-  symbol = 'D',
+  symbol,
   iconName,
+  useLogo = false,
 }: ThreeDCoinProps) {
+  const { isDark } = useAppTheme();
+
+  // If explicitly rendering the official Dhansplit logo emblem
+  if (useLogo) {
+    const coinSource = isDark ? DARK_COIN : LIGHT_COIN;
+    return (
+      <View
+        style={[
+          styles.imageWrapper,
+          {
+            width: size,
+            height: size,
+          },
+        ]}
+      >
+        <Image
+          source={coinSource}
+          style={{ width: size, height: size }}
+          contentFit="contain"
+          transition={250}
+        />
+      </View>
+    );
+  }
+
+  // Sized calculations for custom slide coins (Slide 2: groups, Slide 3: settlements)
   const haloSize = Math.round(size * 1.3);
   const coinWidth = Math.round(size * 0.92);
   const coinHeight = Math.round(size * 0.92);
@@ -23,8 +56,8 @@ export function ThreeDCoin({
       {/* Outer ambient soft lavender/violet glow aura */}
       <LinearGradient
         colors={[
-          'rgba(216, 180, 254, 0.45)',
-          'rgba(233, 213, 255, 0.2)',
+          isDark ? 'rgba(139, 92, 246, 0.35)' : 'rgba(216, 180, 254, 0.45)',
+          isDark ? 'rgba(109, 40, 217, 0.1)' : 'rgba(233, 213, 255, 0.2)',
           'transparent',
         ]}
         start={{ x: 0.5, y: 0.5 }}
@@ -39,7 +72,7 @@ export function ThreeDCoin({
         ]}
       />
 
-      {/* 3D Extrusion Shadow & Depth (Simulating the 3D isometric angle from the screenshot) */}
+      {/* 3D Extrusion Shadow & Depth */}
       <View
         style={[
           styles.extrusionShadow,
@@ -72,7 +105,6 @@ export function ThreeDCoin({
           end={{ x: 0.8, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        {/* Ridge highlights along bottom edge */}
         <View style={styles.ridgeHighlight} />
       </View>
 
@@ -93,7 +125,7 @@ export function ThreeDCoin({
           end={{ x: 0.85, y: 0.9 }}
           style={[styles.bevelGradient, { borderRadius: coinWidth / 2 }]}
         >
-          {/* Inner Face of Coin: Rich Obsidian Dark Metallic */}
+          {/* Inner Face of Coin */}
           <LinearGradient
             colors={['#2D2B38', '#1A1822', '#100F17', '#0C0B12']}
             start={{ x: 0.2, y: 0.1 }}
@@ -107,7 +139,7 @@ export function ThreeDCoin({
               },
             ]}
           >
-            {/* Subtle Inner Engraved Ring */}
+            {/* Inner Engraved Ring */}
             <View
               style={[
                 styles.innerEngravedRing,
@@ -118,28 +150,24 @@ export function ThreeDCoin({
                 },
               ]}
             >
-              {/* Embossed Center Emblem */}
               {iconName ? (
                 <Ionicons
                   name={iconName}
                   size={Math.round(size * 0.36)}
                   color="#F8FAFC"
                 />
-              ) : (
-                <View style={styles.emblemContainer}>
-                  {/* Stylized Modern Metallic Logo Mark matching the Folio F style */}
-                  <Text
-                    style={[
-                      styles.symbolText,
-                      {
-                        fontSize: Math.round(size * 0.32),
-                      },
-                    ]}
-                  >
-                    {symbol}
-                  </Text>
-                </View>
-              )}
+              ) : symbol ? (
+                <Text
+                  style={{
+                    fontSize: Math.round(size * 0.36),
+                    fontWeight: '800',
+                    color: '#F8FAFC',
+                    textAlign: 'center',
+                  }}
+                >
+                  {symbol}
+                </Text>
+              ) : null}
             </View>
 
             {/* Specular Diagonal Reflection Sheen */}
@@ -172,6 +200,10 @@ export function ThreeDCoin({
 }
 
 const styles = StyleSheet.create({
+  imageWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -231,17 +263,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  emblemContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  symbolText: {
-    fontWeight: '900',
-    letterSpacing: -1.5,
-    color: '#F8FAFC',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 1, height: 2 },
-    textShadowRadius: 4,
   },
 });

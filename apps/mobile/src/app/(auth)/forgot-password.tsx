@@ -1,8 +1,21 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from 'react-native';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { AuthFooter, AuthHeader, BackButton, Banner } from '@/components/auth';
+import {
+  AuthFooter,
+  AuthHeader,
+  BackButton,
+  Banner,
+  BrandBadge,
+} from '@/components/auth';
 import { Field, PrimaryButton } from '@/components/form';
 import { forgotPassword } from '@/api/auth';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -53,31 +66,46 @@ export default function ForgotPassword() {
       >
         <ScrollView
           className="flex-1"
-          contentContainerClassName="flex-grow justify-center px-8 py-12"
+          contentContainerClassName="flex-grow justify-center px-6 py-10"
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <BackButton />
-          <AuthHeader
-            title="Reset password"
-            subtitle="Enter your email and we'll send you a reset link"
-          />
+          {/* Top Row: Back button */}
+          <View className="mb-4">
+            <BackButton />
+          </View>
 
-          {formError ? (
-            <View className="mt-6">
-              <Banner tone="error" message={formError} />
-            </View>
-          ) : null}
+          {/* Central Dhansplit Brand Identity */}
+          <BrandBadge />
 
-          {sent ? (
-            <View className="mt-8">
-              <Banner
-                tone="success"
-                message={`If an account exists for ${email.trim()}, a reset link is on its way.`}
-              />
-            </View>
-          ) : (
-            <>
-              <View className="mt-8">
+          {/* Floating Luminous Card Container */}
+          <View className="rounded-[32px] bg-white/85 dark:bg-[#151322]/90 p-6 border border-white/80 dark:border-white/10 shadow-2xl shadow-neutral-900/10">
+            <AuthHeader
+              tagline="// Account Recovery"
+              title="Reset Password"
+              subtitle="Enter your registered email and we'll send you a recovery link."
+            />
+
+            {formError ? (
+              <View className="mb-5">
+                <Banner tone="error" message={formError} />
+              </View>
+            ) : null}
+
+            {sent ? (
+              <View className="gap-5">
+                <Banner
+                  tone="success"
+                  message={`If an account exists for ${email.trim()}, a reset link has been dispatched.`}
+                />
+                <PrimaryButton
+                  title="Return to Sign In"
+                  onPress={() => router.replace('/(auth)/login')}
+                  wrapperClassName="mt-2"
+                />
+              </View>
+            ) : (
+              <View className="gap-4">
                 <Field
                   label="Email address"
                   placeholder="you@example.com"
@@ -88,20 +116,33 @@ export default function ForgotPassword() {
                   onChangeText={setEmail}
                   error={error}
                   onSubmitEditing={onSubmit}
+                  leftIcon={
+                    <Ionicons
+                      name="mail-outline"
+                      size={18}
+                      color={isDark ? '#A78BFA' : '#7C3AED'}
+                    />
+                  }
+                />
+
+                <PrimaryButton
+                  title="Send Reset Link"
+                  loadingTitle="Sending link..."
+                  onPress={onSubmit}
+                  loading={loading}
+                  wrapperClassName="mt-3"
                 />
               </View>
-              <PrimaryButton
-                title="Send reset link"
-                loadingTitle="Sending..."
-                onPress={onSubmit}
-                loading={loading}
-                wrapperClassName="mt-8"
-              />
-            </>
-          )}
+            )}
+          </View>
 
-          <View className="mt-8">
-            <AuthFooter question="Remembered it?" linkText="Back to log in" href="/(auth)/login" />
+          {/* Footer Link */}
+          <View className="mt-6">
+            <AuthFooter
+              question="Remember your password?"
+              linkText="Back to sign in"
+              href="/(auth)/login"
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

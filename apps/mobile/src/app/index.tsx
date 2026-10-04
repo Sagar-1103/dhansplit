@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -8,7 +8,6 @@ import {
   ViewToken,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,40 +21,31 @@ const isSmallScreen = SCREEN_HEIGHT < 750;
 
 interface OnboardingSlide {
   id: string;
-  pageLabel: string;
-  tagline: string;
   title: string;
   subtitle: string;
-  coinSymbol?: string;
-  coinIcon?: keyof typeof Ionicons.glyphMap;
+  coinIcon: keyof typeof Ionicons.glyphMap;
 }
 
 const SLIDES: OnboardingSlide[] = [
   {
     id: '1',
-    pageLabel: '01',
-    tagline: '// Welcome to Dhansplit',
     title: 'Money, Made\nSimple',
     subtitle:
-      'Track your spending, manage your money, and stay in control of your finances',
-    coinSymbol: 'D',
+      'Track shared expenses, manage daily spends, and keep balances clear.',
+    coinIcon: 'wallet',
   },
   {
     id: '2',
-    pageLabel: '02',
-    tagline: '// Effortless Splitting',
     title: 'Split Bills,\nNot Friendships',
     subtitle:
-      'Create groups for trips, flats, or dining out. Add expenses and let Dhansplit do the math',
+      'Create groups for trips, roommates, or dinner. Everyone knows who paid what.',
     coinIcon: 'people',
   },
   {
     id: '3',
-    pageLabel: '03',
-    tagline: '// Instant Settlements',
     title: 'Settle Up,\nIn One Tap',
     subtitle:
-      'See who owes whom at a glance. Settle balances with a single tap and keep everyone happy',
+      'See who owes what in seconds, and record payments with zero hassle.',
     coinIcon: 'checkmark-done',
   },
 ];
@@ -73,13 +63,8 @@ function SlideItem({
       className="flex-1 px-8 justify-between py-2"
     >
       {/* Top Typography Section */}
-      <View className="mt-1">
-        {/* Monospace/Subtle Tagline */}
-        <Text className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
-          {item.tagline}
-        </Text>
-
-        {/* Big Bold Modern Headline matching the reference image */}
+      <View className="mt-2">
+        {/* Bold Modern Headline */}
         <Text className="text-[38px] font-black leading-[44px] text-neutral-900 dark:text-white tracking-tight">
           {item.title}
         </Text>
@@ -90,13 +75,9 @@ function SlideItem({
         </Text>
       </View>
 
-      {/* Center 3D Coin Visual with Ambient Gradient Glow */}
+      {/* Center 3D Coin Visual */}
       <View className="items-center justify-center my-auto py-2">
-        <ThreeDCoin
-          size={coinSize}
-          symbol={item.coinSymbol}
-          iconName={item.coinIcon}
-        />
+        <ThreeDCoin size={coinSize} iconName={item.coinIcon} />
       </View>
     </View>
   );
@@ -165,13 +146,13 @@ export default function Index() {
         <SafeAreaView style={{ flex: 1 }}>
           <View className="flex-1 items-center justify-center px-8">
             <View className="mb-6">
-              <ThreeDCoin size={160} symbol="D" />
+              <ThreeDCoin size={160} iconName="wallet" />
             </View>
             <Text className="font-samarkan text-6xl text-neutral-900 dark:text-white">
               dhan<Text className="text-violet-600 dark:text-violet-400">split</Text>
             </Text>
             <Text className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-              Welcome back to your financial sanctuary
+              Welcome back to Dhansplit
             </Text>
           </View>
           <View className="px-8 pb-10">
@@ -201,47 +182,52 @@ export default function Index() {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Top Bar: 01 / + 3 segmented indicator bars + Skip matching Folio */}
+        {/* Top Header: Distinct Dhansplit Brand Wordmark + Skip Pill */}
         <View className="flex-row items-center justify-between px-8 pt-3 pb-2">
-          {/* Left: 01 / indicator */}
-          <View className="flex-row items-center gap-2.5">
-            <Text className="text-sm font-extrabold text-neutral-900 dark:text-white tracking-tight">
-              {String(activeIndex + 1).padStart(2, '0')} /
+          {/* App Brand Name in Samarkan Typography */}
+          <View className="flex-row items-center">
+            <Text className="font-samarkan text-3xl text-neutral-900 dark:text-white tracking-wide">
+              dhan<Text className="text-violet-600 dark:text-violet-400">split</Text>
             </Text>
-
-            {/* 3 Progress Bars side-by-side matching the Folio reference */}
-            <View className="flex-row items-center gap-1.5">
-              {SLIDES.map((slide, index) => {
-                const isActive = activeIndex === index;
-                return (
-                  <View
-                    key={slide.id}
-                    style={{
-                      width: isActive ? 44 : 32,
-                      height: 4,
-                      borderRadius: 2,
-                    }}
-                    className={
-                      isActive
-                        ? 'bg-neutral-900 dark:bg-white'
-                        : 'bg-violet-200/80 dark:bg-neutral-800'
-                    }
-                  />
-                );
-              })}
-            </View>
           </View>
 
-          {/* Right: Skip */}
+          {/* Quick Skip Button */}
           <Pressable
             onPress={() => router.push('/(auth)/login')}
-            className="py-1 px-2 active:opacity-60"
+            className="px-3.5 py-1.5 rounded-full bg-neutral-900/5 dark:bg-white/10 active:opacity-60"
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
+            <Text className="text-xs font-bold text-neutral-600 dark:text-neutral-300">
               Skip
             </Text>
           </Pressable>
+        </View>
+
+        {/* Progress Bar & Slide Index */}
+        <View className="flex-row items-center justify-between px-8 pt-1 pb-3">
+          <View className="flex-row items-center gap-2">
+            {SLIDES.map((slide, index) => {
+              const isActive = activeIndex === index;
+              return (
+                <View
+                  key={slide.id}
+                  style={{
+                    width: isActive ? 44 : 24,
+                    height: 4,
+                    borderRadius: 2,
+                  }}
+                  className={
+                    isActive
+                      ? 'bg-neutral-900 dark:bg-white'
+                      : 'bg-violet-300/60 dark:bg-neutral-800'
+                  }
+                />
+              );
+            })}
+          </View>
+          <Text className="text-xs font-bold text-neutral-400 dark:text-neutral-500 tracking-wider">
+            {String(activeIndex + 1).padStart(2, '0')} / {String(SLIDES.length).padStart(2, '0')}
+          </Text>
         </View>
 
         {/* Horizontal Slides */}
@@ -263,7 +249,7 @@ export default function Index() {
         <View className="px-8 pb-8 pt-2 gap-3">
           {isLastSlide ? (
             <>
-              {/* Primary Get Started Pill Button */}
+              {/* Primary Get Started Button */}
               <Link href="/(auth)/signup" asChild>
                 <Pressable className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85">
                   <Text className="text-base font-bold text-white dark:text-neutral-900">
@@ -287,19 +273,34 @@ export default function Index() {
               </Link>
             </>
           ) : (
-            <Pressable
-              onPress={handleNext}
-              className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85"
-            >
-              <Text className="text-base font-bold text-white dark:text-neutral-900">
-                Get Started
-              </Text>
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color={isDark ? '#1A1A2E' : '#FFFFFF'}
-              />
-            </Pressable>
+            <>
+              {/* Continue to Next Slide */}
+              <Pressable
+                onPress={handleNext}
+                className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85"
+              >
+                <Text className="text-base font-bold text-white dark:text-neutral-900">
+                  Continue
+                </Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={isDark ? '#1A1A2E' : '#FFFFFF'}
+                />
+              </Pressable>
+
+              {/* Quick Login Link */}
+              <Link href="/(auth)/login" asChild>
+                <Pressable className="items-center justify-center py-2 active:opacity-70">
+                  <Text className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                    Already have an account?{' '}
+                    <Text className="font-bold text-violet-600 dark:text-violet-400">
+                      Log in
+                    </Text>
+                  </Text>
+                </Pressable>
+              </Link>
+            </>
           )}
         </View>
       </SafeAreaView>
