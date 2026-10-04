@@ -1,11 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
-  Dimensions,
   FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   Text,
+  useWindowDimensions,
   View,
-  ViewToken,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,9 +16,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/lib/auth-store';
 import { useAppTheme } from '@/hooks/use-theme';
 import { ThreeDCoin } from '@/components/ui/three-d-coin';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const isSmallScreen = SCREEN_HEIGHT < 750;
 
 interface OnboardingSlide {
   id: string;
@@ -52,15 +50,19 @@ const SLIDES: OnboardingSlide[] = [
 
 function SlideItem({
   item,
+  width,
+  isSmallScreen,
 }: {
   item: OnboardingSlide;
+  width: number;
+  isSmallScreen: boolean;
 }) {
-  const coinSize = isSmallScreen ? 150 : 185;
+  const coinSize = isSmallScreen ? 140 : 175;
 
   return (
     <View
-      style={{ width: SCREEN_WIDTH }}
-      className="flex-1 px-8 justify-between py-2"
+      style={{ width, height: '100%' }}
+      className="px-8 justify-between py-2"
     >
       {/* Top Typography Section */}
       <View className="mt-2">
@@ -86,8 +88,11 @@ function SlideItem({
 export default function Index() {
   const { isAuthenticated, user, hasHydrated } = useAuth();
   const { isDark } = useAppTheme();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isSmallScreen = windowHeight < 750;
+
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated && user) {
@@ -95,15 +100,16 @@ export default function Index() {
     }
   }, [hasHydrated, isAuthenticated, user]);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setActiveIndex(viewableItems[0].index);
+  const handleMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = e.nativeEvent.contentOffset.x;
+      const newIndex = Math.round(offsetX / windowWidth);
+      if (newIndex >= 0 && newIndex < SLIDES.length) {
+        setActiveIndex(newIndex);
       }
-    }
-  ).current;
-
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+    },
+    [windowWidth]
+  );
 
   const isLastSlide = activeIndex === SLIDES.length - 1;
 
@@ -112,11 +118,43 @@ export default function Index() {
       router.push('/(auth)/signup');
       return;
     }
+    const nextIndex = activeIndex + 1;
     flatListRef.current?.scrollToIndex({
-      index: activeIndex + 1,
+      index: nextIndex,
       animated: true,
     });
+    setActiveIndex(nextIndex);
   };
+
+  const renderItem = useCallback(
+    ({ item }: { item: OnboardingSlide }) => (
+      <SlideItem
+        item={item}
+        width={windowWidth}
+        isSmallScreen={isSmallScreen}
+      />
+    ),
+    [windowWidth, isSmallScreen]
+  );
+
+  const getItemLayout = useCallback(
+    (_: unknown, index: number) => ({
+      length: windowWidth,
+      offset: windowWidth * index,
+      index,
+    }),
+    [windowWidth]
+  );
+
+  const onScrollToIndexFailed = useCallback(
+    (info: { index: number }) => {
+      flatListRef.current?.scrollToOffset({
+        offset: info.index * windowWidth,
+        animated: true,
+      });
+    },
+    [windowWidth]
+  );
 
   // Background Gradient Colors
   const gradientColors = isDark
@@ -237,12 +275,22 @@ export default function Index() {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
+          bounces={false}
+          scrollEventThrottle={16}
+          decelerationRate="fast"
+          snapToInterval={windowWidth}
+          snapToAlignment="start"
+          disableIntervalMomentum
+          removeClippedSubviews={false}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={3}
+          getItemLayout={getItemLayout}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <SlideItem item={item} />}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
+          renderItem={renderItem}
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
         />
 
         {/* Bottom CTA Area */}
