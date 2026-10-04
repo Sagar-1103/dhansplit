@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { AuthFooter, AuthHeader, BackButton, Banner } from '@/components/auth';
 import { Field, PrimaryButton } from '@/components/form';
 import { login } from '@/api/auth';
+import { useAppTheme } from '@/hooks/use-theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
+  const { isDark } = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,82 +39,94 @@ export default function Login() {
     }
   }
 
+  const screenGradient = isDark
+    ? (['#18122B', '#110E1D', '#0C0A14', '#151024'] as const)
+    : (['#EBE2FB', '#F4EEFD', '#FAF8FE', '#F6F3FA'] as const);
+
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-neutral-950"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <LinearGradient
+      colors={screenGradient}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.8, y: 1 }}
+      style={{ flex: 1 }}
     >
-      <ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerClassName="flex-grow justify-center px-8 py-12"
-        keyboardShouldPersistTaps="handled"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <BackButton />
-        <AuthHeader title="Welcome back" subtitle="Log in to continue splitting" />
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="flex-grow justify-center px-8 py-12"
+          keyboardShouldPersistTaps="handled"
+        >
+          <BackButton />
+          <AuthHeader title="Welcome back" subtitle="Log in to continue splitting" />
 
-        {formError ? (
-          <View className="mt-6">
-            <Banner tone="error" message={formError} />
+          {formError ? (
+            <View className="mt-6">
+              <Banner tone="error" message={formError} />
+            </View>
+          ) : null}
+
+          <View className="mt-8 gap-5">
+            <Field
+              label="Email"
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={setEmail}
+              error={errors.email}
+            />
+
+            <Field
+              label="Password"
+              placeholder="••••••••"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              error={errors.password}
+              rightIcon={
+                <Pressable
+                  onPress={() => setShowPassword((p) => !p)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={isDark ? '#9CA3AF' : '#6B7280'}
+                  />
+                </Pressable>
+              }
+            />
           </View>
-        ) : null}
 
-        <View className="mt-8 gap-5">
-          <Field
-            label="Email address"
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            value={email}
-            onChangeText={setEmail}
-            error={errors.email}
+          <Link href="/(auth)/forgot-password" asChild>
+            <Pressable className="mt-3 self-end py-1">
+              <Text className="text-xs font-semibold text-violet-600 dark:text-violet-400">
+                Forgot password?
+              </Text>
+            </Pressable>
+          </Link>
+
+          <PrimaryButton
+            title="Log in"
+            loadingTitle="Logging in..."
+            onPress={onSubmit}
+            loading={loading}
+            wrapperClassName="mt-8"
           />
-          <Field
-            label="Password"
-            placeholder="Your password"
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            value={password}
-            onChangeText={setPassword}
-            error={errors.password}
-            onSubmitEditing={onSubmit}
-            rightIcon={
-              <Pressable
-                className="px-3 py-3 active:opacity-60"
-                onPress={() => setShowPassword((s) => !s)}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#a3a3a3"
-                />
-              </Pressable>
-            }
-          />
-        </View>
 
-        <Link href="/(auth)/forgot-password" asChild>
-          <Pressable className="mt-3 self-end active:opacity-60">
-            <Text className="text-sm text-emerald-400">Forgot your password?</Text>
-          </Pressable>
-        </Link>
-
-        <PrimaryButton
-          title="Log in"
-          loadingTitle="Logging in..."
-          onPress={onSubmit}
-          loading={loading}
-          wrapperClassName="mt-8"
-        />
-
-        <View className="mt-8">
-          <AuthFooter
-            question="New to Dhansplit?"
-            linkText="Create an account"
-            href="/(auth)/signup"
-          />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View className="mt-8">
+            <AuthFooter
+              question="New to Dhansplit?"
+              linkText="Create an account"
+              href="/(auth)/signup"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }

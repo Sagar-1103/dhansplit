@@ -11,15 +11,18 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { AuthFooter, AuthHeader, BackButton, Banner } from '@/components/auth';
 import { PhotoSheet } from '@/components/photo-sheet';
 import { Field, PrimaryButton } from '@/components/form';
 import { signup } from '@/api/auth';
+import { useAppTheme } from '@/hooks/use-theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Signup() {
+  const { isDark } = useAppTheme();
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -94,30 +97,41 @@ export default function Signup() {
     }
   }
 
-  const passwordEyeIcon = (
-    <Pressable className="px-3 py-3 active:opacity-60" onPress={() => setShowPassword((s) => !s)}>
-      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#a3a3a3" />
+  const eyeIcon = (show: boolean, toggle: () => void) => (
+    <Pressable className="px-3 py-3 active:opacity-60" onPress={toggle}>
+      <Ionicons
+        name={show ? 'eye-off-outline' : 'eye-outline'}
+        size={20}
+        color={isDark ? '#9CA3AF' : '#6B7280'}
+      />
     </Pressable>
   );
 
-  const confirmPasswordEyeIcon = (
-    <Pressable className="px-3 py-3 active:opacity-60" onPress={() => setShowConfirmPassword((s) => !s)}>
-      <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#a3a3a3" />
-    </Pressable>
-  );
+  const screenGradient = isDark
+    ? (['#18122B', '#110E1D', '#0C0A14', '#151024'] as const)
+    : (['#EBE2FB', '#F4EEFD', '#FAF8FE', '#F6F3FA'] as const);
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-neutral-950"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <LinearGradient
+      colors={screenGradient}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.8, y: 1 }}
+      style={{ flex: 1 }}
     >
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-grow justify-center px-8 py-12"
         keyboardShouldPersistTaps="handled"
       >
         <BackButton />
-        <AuthHeader title="Create your account" subtitle="Start splitting expenses in minutes" />
+        <AuthHeader
+          title="Create your account"
+          subtitle="Start splitting expenses in minutes"
+        />
 
         {formError ? (
           <View className="mt-6">
@@ -128,16 +142,20 @@ export default function Signup() {
         <View className="mt-8 items-center gap-3">
           <Pressable
             onPress={() => setSheetOpen(true)}
-            className="h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-neutral-700 bg-neutral-900 active:opacity-60"
+            className="h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 active:opacity-60"
           >
             {photo ? (
               <Image source={{ uri: photo.uri }} className="h-full w-full" />
             ) : (
-              <Ionicons name="camera-outline" size={28} color="#525252" />
+              <Ionicons
+                name="camera-outline"
+                size={28}
+                color={isDark ? '#6B7280' : '#9CA3AF'}
+              />
             )}
           </Pressable>
           <Pressable onPress={() => setSheetOpen(true)} className="active:opacity-60">
-            <Text className="text-sm font-medium text-emerald-400">
+            <Text className="text-sm font-semibold text-violet-600 dark:text-violet-400">
               {photo ? 'Change photo' : 'Upload photo'}
             </Text>
           </Pressable>
@@ -171,7 +189,7 @@ export default function Signup() {
             value={password}
             onChangeText={setPassword}
             error={errors.password}
-            rightIcon={passwordEyeIcon}
+            rightIcon={eyeIcon(showPassword, () => setShowPassword((s) => !s))}
           />
           <Field
             label="Confirm password"
@@ -182,7 +200,9 @@ export default function Signup() {
             onChangeText={setConfirmPassword}
             error={errors.confirmPassword}
             onSubmitEditing={onSubmit}
-            rightIcon={confirmPasswordEyeIcon}
+            rightIcon={eyeIcon(showConfirmPassword, () =>
+              setShowConfirmPassword((s) => !s)
+            )}
           />
         </View>
 
@@ -217,6 +237,7 @@ export default function Signup() {
             : undefined
         }
       />
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
