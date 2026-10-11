@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -12,13 +12,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AuthFooter,
   AuthHeader,
-  BackButton,
+  AuthTopBar,
   Banner,
-  BrandBadge,
 } from '@/components/auth';
 import { PhotoSheet } from '@/components/photo-sheet';
 import { Field, PrimaryButton } from '@/components/form';
@@ -108,7 +108,11 @@ export default function Signup() {
   }
 
   const eyeIcon = (show: boolean, toggle: () => void) => (
-    <Pressable className="px-2 py-2 active:opacity-60" onPress={toggle}>
+    <Pressable
+      className="py-1 px-1.5 active:opacity-60"
+      onPress={toggle}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+    >
       <Ionicons
         name={show ? 'eye-off-outline' : 'eye-outline'}
         size={18}
@@ -117,190 +121,173 @@ export default function Signup() {
     </Pressable>
   );
 
-  const screenGradient = isDark
-    ? (['#18122B', '#110E1D', '#0C0A14', '#151024'] as const)
-    : (['#EBE2FB', '#F4EEFD', '#FAF8FE', '#F6F3FA'] as const);
+  const gradientColors = isDark
+    ? (['#18122C', '#120F20', '#0D0B16', '#1A132E'] as const)
+    : (['#EDE3FD', '#F7F3FE', '#FFFFFF', '#ECE3FA'] as const);
 
   return (
     <LinearGradient
-      colors={screenGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0.8, y: 1 }}
+      colors={gradientColors}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
       style={{ flex: 1 }}
     >
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
           className="flex-1"
-          contentContainerClassName="flex-grow justify-center px-6 py-10"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Top Row: Back button */}
-          <View className="mb-4">
-            <BackButton />
-          </View>
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="flex-grow justify-between px-8 pb-8 pt-2"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top Navigation Bar with Back & Wordmark */}
+            <View>
+              <AuthTopBar />
 
-          {/* Central Dhansplit Brand Identity */}
-          <BrandBadge />
+              {/* Clean Hero Header */}
+              <AuthHeader
+                title="Create account"
+                subtitle="Join your friends and manage group expenses effortlessly."
+              />
 
-          {/* Floating Luminous Card Container */}
-          <View className="rounded-[32px] bg-white/85 dark:bg-[#151322]/90 p-6 border border-white/80 dark:border-white/10 shadow-2xl shadow-neutral-900/10">
-            <AuthHeader
-              tagline="// Join Dhansplit"
-              title="Create Account"
-              subtitle="Start tracking group expenses and settle debts seamlessly."
-            />
+              {formError ? (
+                <View className="mb-4">
+                  <Banner tone="error" message={formError} />
+                </View>
+              ) : null}
 
-            {formError ? (
-              <View className="mb-5">
-                <Banner tone="error" message={formError} />
-              </View>
-            ) : null}
-
-            {/* Profile Avatar Upload with polished styling */}
-            <View className="items-center mb-5">
-              <View className="relative">
-                <Pressable
-                  onPress={() => setSheetOpen(true)}
-                  className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-neutral-800 shadow-sm active:opacity-75"
-                >
-                  {photo ? (
-                    <Image source={{ uri: photo.uri }} className="h-full w-full" />
-                  ) : (
+              {/* Profile Avatar Upload with polished styling */}
+              <View className="items-center mb-6">
+                <View className="relative">
+                  <Pressable
+                    onPress={() => setSheetOpen(true)}
+                    className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400/80 dark:border-violet-500/80 bg-white/80 dark:bg-white/[0.08] shadow-md active:opacity-75"
+                  >
+                    {photo ? (
+                      <Image source={{ uri: photo.uri }} className="h-full w-full" />
+                    ) : (
+                      <Ionicons
+                        name="camera-outline"
+                        size={26}
+                        color={isDark ? '#C4B5FD' : '#7C3AED'}
+                      />
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setSheetOpen(true)}
+                    className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-neutral-900 dark:bg-white shadow-sm active:opacity-80"
+                  >
                     <Ionicons
-                      name="camera-outline"
-                      size={26}
-                      color={isDark ? '#A78BFA' : '#7C3AED'}
+                      name="add"
+                      size={14}
+                      color={isDark ? '#1A1A2E' : '#FFFFFF'}
+                    />
+                  </Pressable>
+                </View>
+                <Text className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 mt-1.5">
+                  Profile Photo (Optional)
+                </Text>
+              </View>
+
+              <View className="gap-3.5">
+                <Field
+                  label="Full Name"
+                  placeholder="Your name"
+                  autoCapitalize="words"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  error={errors.fullName}
+                  leftIcon={(color) => (
+                    <Ionicons name="person-outline" size={18} color={color} />
+                  )}
+                />
+
+                <Field
+                  label="Email address"
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                  error={errors.email}
+                  leftIcon={(color) => (
+                    <Ionicons name="mail-outline" size={18} color={color} />
+                  )}
+                />
+
+                <Field
+                  label="Password"
+                  placeholder="At least 8 characters"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  error={errors.password}
+                  leftIcon={(color) => (
+                    <Ionicons name="lock-closed-outline" size={18} color={color} />
+                  )}
+                  rightIcon={eyeIcon(showPassword, () =>
+                    setShowPassword((p) => !p)
+                  )}
+                />
+
+                <Field
+                  label="Confirm Password"
+                  placeholder="Repeat password"
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  error={errors.confirmPassword}
+                  leftIcon={(color) => (
+                    <Ionicons
+                      name="shield-checkmark-outline"
+                      size={18}
+                      color={color}
                     />
                   )}
-                </Pressable>
-                <Pressable
-                  onPress={() => setSheetOpen(true)}
-                  className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-neutral-900 dark:bg-white shadow-sm active:opacity-80"
-                >
-                  <Ionicons
-                    name="add"
-                    size={14}
-                    color={isDark ? '#1A1A2E' : '#FFFFFF'}
-                  />
-                </Pressable>
+                  rightIcon={eyeIcon(showConfirmPassword, () =>
+                    setShowConfirmPassword((p) => !p)
+                  )}
+                />
               </View>
-              <Text className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 mt-1.5">
-                Profile Photo (Optional)
-              </Text>
             </View>
 
-            <View className="gap-3.5">
-              <Field
-                label="Full Name"
-                placeholder="John Doe"
-                autoCapitalize="words"
-                value={fullName}
-                onChangeText={setFullName}
-                error={errors.fullName}
-                leftIcon={
-                  <Ionicons
-                    name="person-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
+            {/* Bottom Actions */}
+            <View className="mt-8 gap-3">
+              <PrimaryButton
+                title="Create Account"
+                loadingTitle="Creating account..."
+                onPress={onSubmit}
+                loading={loading}
               />
 
-              <Field
-                label="Email address"
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
-                leftIcon={
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
-              />
-
-              <Field
-                label="Password"
-                placeholder="At least 8 characters"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                leftIcon={
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
-                rightIcon={eyeIcon(showPassword, () =>
-                  setShowPassword((p) => !p)
-                )}
-              />
-
-              <Field
-                label="Confirm Password"
-                placeholder="Repeat password"
-                secureTextEntry={!showConfirmPassword}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                error={errors.confirmPassword}
-                leftIcon={
-                  <Ionicons
-                    name="shield-checkmark-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
-                rightIcon={eyeIcon(showConfirmPassword, () =>
-                  setShowConfirmPassword((p) => !p)
-                )}
+              <AuthFooter
+                question="Already have an account?"
+                linkText="Sign in"
+                href="/(auth)/login"
               />
             </View>
+          </ScrollView>
 
-            <PrimaryButton
-              title="Create Account"
-              loadingTitle="Creating account..."
-              onPress={onSubmit}
-              loading={loading}
-              wrapperClassName="mt-6"
-            />
-          </View>
-
-          {/* Footer Link */}
-          <View className="mt-6">
-            <AuthFooter
-              question="Already have an account?"
-              linkText="Sign in"
-              href="/(auth)/login"
-            />
-          </View>
-        </ScrollView>
-
-        <PhotoSheet
-          visible={sheetOpen}
-          onClose={() => setSheetOpen(false)}
-          onCamera={openCamera}
-          onGallery={openGallery}
-          onRemove={
-            photo
-              ? () => {
-                  setPhoto(null);
-                  setSheetOpen(false);
-                }
-              : undefined
-          }
-        />
-      </KeyboardAvoidingView>
+          <PhotoSheet
+            visible={sheetOpen}
+            onClose={() => setSheetOpen(false)}
+            onCamera={openCamera}
+            onGallery={openGallery}
+            onRemove={
+              photo
+                ? () => {
+                    setPhoto(null);
+                    setSheetOpen(false);
+                  }
+                : undefined
+            }
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

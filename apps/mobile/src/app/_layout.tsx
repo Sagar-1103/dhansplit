@@ -1,15 +1,19 @@
 import '../../global.css';
 
+import React, { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+
+// Keep the native splash screen visible until fonts and auth state are ready
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -21,12 +25,18 @@ cssInterop(SafeAreaView, { className: 'style' });
 
 export default function RootLayout() {
   const { isDark } = useAppTheme();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Samarkan: require('../../assets/fonts/Samarkan.ttf'),
   });
 
-  if (!fontsLoaded) {
-    return <View className="flex-1 bg-violet-50 dark:bg-[#0c0c14]" />;
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
   }
 
   return (

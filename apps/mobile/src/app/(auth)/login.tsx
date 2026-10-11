@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,13 +10,13 @@ import {
 import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AuthFooter,
   AuthHeader,
-  BackButton,
+  AuthTopBar,
   Banner,
-  BrandBadge,
 } from '@/components/auth';
 import { Field, PrimaryButton } from '@/components/form';
 import { login } from '@/api/auth';
@@ -52,124 +52,115 @@ export default function Login() {
     }
   }
 
-  const screenGradient = isDark
-    ? (['#18122B', '#110E1D', '#0C0A14', '#151024'] as const)
-    : (['#EBE2FB', '#F4EEFD', '#FAF8FE', '#F6F3FA'] as const);
+  const gradientColors = isDark
+    ? (['#18122C', '#120F20', '#0D0B16', '#1A132E'] as const)
+    : (['#EDE3FD', '#F7F3FE', '#FFFFFF', '#ECE3FA'] as const);
 
   return (
     <LinearGradient
-      colors={screenGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0.8, y: 1 }}
+      colors={gradientColors}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
       style={{ flex: 1 }}
     >
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
           className="flex-1"
-          contentContainerClassName="flex-grow justify-center px-6 py-10"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Top Row: Back button */}
-          <View className="mb-4">
-            <BackButton />
-          </View>
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="flex-grow justify-between px-8 pb-8 pt-2"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top Navigation Bar with Back & Wordmark */}
+            <View>
+              <AuthTopBar />
 
-          {/* Central Dhansplit Brand Identity */}
-          <BrandBadge />
+              {/* Clean Hero Header */}
+              <AuthHeader
+                title="Welcome back"
+                subtitle="Sign in to access your groups, shared expenses, and settlements."
+              />
 
-          {/* Floating Luminous Card Container */}
-          <View className="rounded-[32px] bg-white/85 dark:bg-[#151322]/90 p-6 border border-white/80 dark:border-white/10 shadow-2xl shadow-neutral-900/10">
-            <AuthHeader
-              tagline="// Welcome back"
-              title="Sign In"
-              subtitle="Log in to manage your groups, shared expenses, and settlements."
-            />
+              {formError ? (
+                <View className="mb-4">
+                  <Banner tone="error" message={formError} />
+                </View>
+              ) : null}
 
-            {formError ? (
-              <View className="mb-5">
-                <Banner tone="error" message={formError} />
+              {/* Form Fields */}
+              <View className="gap-4">
+                <Field
+                  label="Email address"
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                  error={errors.email}
+                  leftIcon={(color) => (
+                    <Ionicons name="mail-outline" size={18} color={color} />
+                  )}
+                />
+
+                <View>
+                  <Field
+                    label="Password"
+                    placeholder="••••••••"
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={setPassword}
+                    error={errors.password}
+                    leftIcon={(color) => (
+                      <Ionicons name="lock-closed-outline" size={18} color={color} />
+                    )}
+                    rightIcon={
+                      <Pressable
+                        onPress={() => setShowPassword((p) => !p)}
+                        className="py-1 px-1.5 active:opacity-60"
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      >
+                        <Ionicons
+                          name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={isDark ? '#9CA3AF' : '#6B7280'}
+                        />
+                      </Pressable>
+                    }
+                  />
+
+                  <Link href="/(auth)/forgot-password" asChild>
+                    <Pressable className="mt-2.5 self-end py-1">
+                      <Text className="text-xs font-semibold text-violet-600 dark:text-violet-400">
+                        Forgot password?
+                      </Text>
+                    </Pressable>
+                  </Link>
+                </View>
               </View>
-            ) : null}
-
-            <View className="gap-4">
-              <Field
-                label="Email address"
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
-                leftIcon={
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
-              />
-
-              <Field
-                label="Password"
-                placeholder="••••••••"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                leftIcon={
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color={isDark ? '#A78BFA' : '#7C3AED'}
-                  />
-                }
-                rightIcon={
-                  <Pressable
-                    onPress={() => setShowPassword((p) => !p)}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  >
-                    <Ionicons
-                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                      size={18}
-                      color={isDark ? '#9CA3AF' : '#6B7280'}
-                    />
-                  </Pressable>
-                }
-              />
             </View>
 
-            <Link href="/(auth)/forgot-password" asChild>
-              <Pressable className="mt-3.5 self-end py-1">
-                <Text className="text-xs font-semibold text-violet-600 dark:text-violet-400">
-                  Forgot password?
-                </Text>
-              </Pressable>
-            </Link>
+            {/* Bottom Actions */}
+            <View className="mt-8 gap-3">
+              <PrimaryButton
+                title="Sign In"
+                loadingTitle="Signing in..."
+                onPress={onSubmit}
+                loading={loading}
+              />
 
-            <PrimaryButton
-              title="Sign In"
-              loadingTitle="Signing in..."
-              onPress={onSubmit}
-              loading={loading}
-              wrapperClassName="mt-6"
-            />
-          </View>
-
-          {/* Footer Link */}
-          <View className="mt-6">
-            <AuthFooter
-              question="New to Dhansplit?"
-              linkText="Create an account"
-              href="/(auth)/signup"
-            />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <AuthFooter
+                question="New to Dhansplit?"
+                linkText="Create an account"
+                href="/(auth)/signup"
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

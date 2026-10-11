@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
+  Animated,
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -93,12 +94,29 @@ export default function Index() {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated && user) {
       router.replace('/dashboard');
     }
   }, [hasHydrated, isAuthenticated, user]);
+
+  const handleScroll = useRef(
+    Animated.event(
+      [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+      {
+        useNativeDriver: false,
+        listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+          const offsetX = e.nativeEvent.contentOffset.x;
+          const newIndex = Math.round(offsetX / windowWidth);
+          if (newIndex >= 0 && newIndex < SLIDES.length) {
+            setActiveIndex(newIndex);
+          }
+        },
+      }
+    )
+  ).current;
 
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -123,7 +141,6 @@ export default function Index() {
       index: nextIndex,
       animated: true,
     });
-    setActiveIndex(nextIndex);
   };
 
   const renderItem = useCallback(
@@ -241,31 +258,52 @@ export default function Index() {
           </Pressable>
         </View>
 
-        {/* Progress Bar & Slide Index */}
-        <View className="flex-row items-center justify-between px-8 pt-1 pb-3">
+        {/* Progress Indicator Pills */}
+        <View className="px-8 pt-1 pb-3">
           <View className="flex-row items-center gap-2">
             {SLIDES.map((slide, index) => {
-              const isActive = activeIndex === index;
+              const inputRange = [
+                (index - 1) * windowWidth,
+                index * windowWidth,
+                (index + 1) * windowWidth,
+              ];
+
+              const widthAnim = scrollX.interpolate({
+                inputRange,
+                outputRange: [14, 28, 14],
+                extrapolate: 'clamp',
+              });
+
+              const opacityAnim = scrollX.interpolate({
+                inputRange,
+                outputRange: [0.3, 1, 0.3],
+                extrapolate: 'clamp',
+              });
+
               return (
-                <View
+                <Pressable
                   key={slide.id}
-                  style={{
-                    width: isActive ? 44 : 24,
-                    height: 4,
-                    borderRadius: 2,
+                  onPress={() => {
+                    flatListRef.current?.scrollToIndex({
+                      index,
+                      animated: true,
+                    });
                   }}
-                  className={
-                    isActive
-                      ? 'bg-neutral-900 dark:bg-white'
-                      : 'bg-violet-300/60 dark:bg-neutral-800'
-                  }
-                />
+                  hitSlop={{ top: 12, bottom: 12, left: 6, right: 6 }}
+                >
+                  <Animated.View
+                    style={{
+                      width: widthAnim,
+                      opacity: opacityAnim,
+                      height: 4,
+                      borderRadius: 2,
+                    }}
+                    className="bg-neutral-900 dark:bg-white"
+                  />
+                </Pressable>
               );
             })}
           </View>
-          <Text className="text-xs font-bold text-neutral-400 dark:text-neutral-500 tracking-wider">
-            {String(activeIndex + 1).padStart(2, '0')} / {String(SLIDES.length).padStart(2, '0')}
-          </Text>
         </View>
 
         {/* Horizontal Slides */}
@@ -287,48 +325,21 @@ export default function Index() {
           windowSize={3}
           getItemLayout={getItemLayout}
           onScrollToIndexFailed={onScrollToIndexFailed}
+          onScroll={handleScroll}
           onMomentumScrollEnd={handleMomentumScrollEnd}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           style={{ flex: 1 }}
         />
 
-        {/* Bottom CTA Area */}
+        {/* Bottom CTA Area - Consistent UI/UX Across All Slides */}
         <View className="px-8 pb-8 pt-2 gap-3">
+          {/* Primary Action Button */}
           {isLastSlide ? (
-            <>
-              {/* Primary Get Started Button */}
-              <Link href="/(auth)/signup" asChild>
-                <Pressable className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85">
-                  <Text className="text-base font-bold text-white dark:text-neutral-900">
-                    Get Started
-                  </Text>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={18}
-                    color={isDark ? '#1A1A2E' : '#FFFFFF'}
-                  />
-                </Pressable>
-              </Link>
-
-              {/* Secondary Pill Button */}
-              <Link href="/(auth)/login" asChild>
-                <Pressable className="items-center justify-center rounded-full border border-neutral-300/80 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/70 py-3.5 px-6 active:opacity-80">
-                  <Text className="text-sm font-bold text-neutral-900 dark:text-white">
-                    I already have an account
-                  </Text>
-                </Pressable>
-              </Link>
-            </>
-          ) : (
-            <>
-              {/* Continue to Next Slide */}
-              <Pressable
-                onPress={handleNext}
-                className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85"
-              >
+            <Link href="/(auth)/signup" asChild>
+              <Pressable className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85">
                 <Text className="text-base font-bold text-white dark:text-neutral-900">
-                  Continue
+                  Get Started
                 </Text>
                 <Ionicons
                   name="arrow-forward"
@@ -336,20 +347,34 @@ export default function Index() {
                   color={isDark ? '#1A1A2E' : '#FFFFFF'}
                 />
               </Pressable>
-
-              {/* Quick Login Link */}
-              <Link href="/(auth)/login" asChild>
-                <Pressable className="items-center justify-center py-2 active:opacity-70">
-                  <Text className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                    Already have an account?{' '}
-                    <Text className="font-bold text-violet-600 dark:text-violet-400">
-                      Log in
-                    </Text>
-                  </Text>
-                </Pressable>
-              </Link>
-            </>
+            </Link>
+          ) : (
+            <Pressable
+              onPress={handleNext}
+              className="flex-row items-center justify-center gap-2 rounded-full bg-neutral-900 dark:bg-white py-4 px-6 shadow-xl shadow-neutral-900/25 active:opacity-85"
+            >
+              <Text className="text-base font-bold text-white dark:text-neutral-900">
+                Continue
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={isDark ? '#1A1A2E' : '#FFFFFF'}
+              />
+            </Pressable>
           )}
+
+          {/* Quick Login Link */}
+          <Link href="/(auth)/login" asChild>
+            <Pressable className="items-center justify-center py-2 active:opacity-70">
+              <Text className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                Already have an account?{' '}
+                <Text className="font-bold text-violet-600 dark:text-violet-400">
+                  Log in
+                </Text>
+              </Text>
+            </Pressable>
+          </Link>
         </View>
       </SafeAreaView>
     </LinearGradient>
